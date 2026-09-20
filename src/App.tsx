@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import Register from './pages/Register';
+
+
 import {
     Activity, AlertTriangle, AlertOctagon,Bell, CalendarDays,ChevronDown,ChevronRight, Cloud,
     CloudRain,CloudSun, Droplets, Gauge, HeartPulse, History, LayoutDashboard, Leaf, Map as         MapIcon, MapPin,Menu, Moon, MoreHorizontal, RefreshCw, Search, Settings as SettingsIcon,        SlidersHorizontal,Sparkles, Sun, Thermometer, Wind, Zap, CloudLightning, CloudSnow,             TrendingUp, TrendingDown,Minus
@@ -17,6 +23,8 @@ import {
   type ForecastPoint, type HistoryPoint
 } from '@/services/api';
 import { useApi, useClock } from '@/hooks/useApi';
+
+
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -75,15 +83,22 @@ function Shell() {
         <Header title={current} menu={() => setSidebarOpen(true)} theme={theme} toggleTheme={toggle} />
         <main className="content">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/aqi" element={<AQIMonitor />} />
-            <Route path="/forecast" element={<Forecast />} />
-            <Route path="/map" element={<MapView />} />
-            <Route path="/historical" element={<HistoricalData />} />
-            <Route path="/insights" element={<Insights />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/settings" element={<Settings />} />
+            {/* Public authentication pages */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Protected AeroNex application */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/aqi" element={<AQIMonitor />} />
+              <Route path="/forecast" element={<Forecast />} />
+              <Route path="/map" element={<MapView />} />
+              <Route path="/historical" element={<HistoricalData />} />
+              <Route path="/insights" element={<Insights />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
           </Routes>
         </main>
       </div>
@@ -120,6 +135,8 @@ function Sidebar({ open, close }: { open: boolean; close: () => void }) {
 function Header({ title, menu, theme, toggleTheme }: { title: string; menu: () => void; theme: string; toggleTheme: () => void }) {
   const now = useClock();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   return (
     <header className="topbar">
       <button className="icon-button mobile-menu" onClick={menu} aria-label="Open navigation"><Menu size={21} /></button>
@@ -131,7 +148,35 @@ function Header({ title, menu, theme, toggleTheme }: { title: string; menu: () =
           {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
         </button>
         <button className="icon-button" onClick={() => navigate('/alerts')} aria-label="Notifications"><Bell size={19} /><i className="notification-dot" /></button>
-        <div className="avatar">AN</div>
+        <div className="profile-wrapper">
+        <button
+          className="avatar"
+          onClick={() => setShowProfileMenu((prev) => !prev)}
+          title="Profile"
+          aria-label="Open profile menu"
+        >
+          AN
+        </button>
+
+        {showProfileMenu && (
+          <div className="profile-menu">
+            <div className="profile-menu-name">
+              AeroNex User
+            </div>
+
+            <button
+              className="profile-logout"
+              onClick={async () => {
+                setShowProfileMenu(false);
+                await signOut();
+                navigate('/login');
+              }}>
+                
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
       </div>
     </header>
   );
