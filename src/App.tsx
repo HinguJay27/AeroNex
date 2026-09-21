@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Landing from './pages/Landing';
 
 
 import {
@@ -75,34 +76,62 @@ function Shell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const location = useLocation();
-  const current = navItems.find((item) => location.pathname.startsWith(item.path))?.label ?? 'Dashboard';
-  return (
-    <div className="app-shell">
-      <Sidebar open={sidebarOpen} close={() => setSidebarOpen(false)} />
-      <div className="main-area">
-        <Header title={current} menu={() => setSidebarOpen(true)} theme={theme} toggleTheme={toggle} />
-        <main className="content">
-          <Routes>
-            {/* Public authentication pages */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
 
-            {/* Protected AeroNex application */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/aqi" element={<AQIMonitor />} />
-              <Route path="/forecast" element={<Forecast />} />
-              <Route path="/map" element={<MapView />} />
-              <Route path="/historical" element={<HistoricalData />} />
-              <Route path="/insights" element={<Insights />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/settings" element={<Settings />} />
-            </Route>
-          </Routes>
-        </main>
-      </div>
-    </div>
+  const isPublicPage =
+    location.pathname === '/' ||
+    location.pathname === '/login' ||
+    location.pathname === '/register';
+
+  const current =
+    navItems.find((item) => location.pathname.startsWith(item.path))?.label ??
+    'Dashboard';
+
+  return (
+    <>
+      {isPublicPage ? (
+        <Routes>
+          {/* Public pages */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      ) : (
+        <div className="app-shell">
+          <Sidebar
+            open={sidebarOpen}
+            close={() => setSidebarOpen(false)}
+          />
+
+          <div className="main-area">
+            <Header
+              title={current}
+              menu={() => setSidebarOpen(true)}
+              theme={theme}
+              toggleTheme={toggle}
+            />
+
+            <main className="content">
+              <Routes>
+                {/* Protected AeroNex application */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/aqi" element={<AQIMonitor />} />
+                  <Route path="/forecast" element={<Forecast />} />
+                  <Route path="/map" element={<MapView />} />
+                  <Route
+                    path="/historical"
+                    element={<HistoricalData />}
+                  />
+                  <Route path="/insights" element={<Insights />} />
+                  <Route path="/alerts" element={<Alerts />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
+              </Routes>
+            </main>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
